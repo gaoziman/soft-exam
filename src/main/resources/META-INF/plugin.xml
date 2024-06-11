@@ -27,4 +27,13 @@
     <extensions defaultExtensionNs="com.intellij">
 
     </extensions>
+
+
+    <actions>
+        <!-- Add your actions here -->
+        <action id="MyAction" class="org.javatop.exam.MyAction" text="MyAction" description="MyAction">
+            <add-to-group group-id="FileMenu" anchor="first"/>
+        </action>
+
+    </actions>
 </idea-plugin>
