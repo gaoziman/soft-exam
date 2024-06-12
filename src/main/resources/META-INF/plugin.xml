@@ -31,9 +31,14 @@
 
     <actions>
         <!-- Add your actions here -->
-        <action id="MyAction" class="org.javatop.exam.MyAction" text="MyAction" description="MyAction">
+        <action id="MyAction" class="org.javatop.exam.action.MyAction" text="MyAction" description="MyAction">
             <add-to-group group-id="FileMenu" anchor="first"/>
         </action>
 
+        <action id="org.javatop.helloworldplugin.action.HelloAction" class="org.javatop.exam.action.HelloAction"
+                text="点击显示你好" description="初始显示你好的第一个Action">
+            <add-to-group group-id="ToolsMenu" anchor="first"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="first"/>
+        </action>
     </actions>
 </idea-plugin>

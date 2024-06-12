@@ -1,4 +1,4 @@
-package org.javatop.exam;
+package org.javatop.exam.action;
 
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
