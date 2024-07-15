@@ -16,6 +16,10 @@ repositories {
 }
 
 
+dependencies {
+    implementation group: 'com.mysql', name: 'mysql-connector-j', version: '8.3.0'
+}
+
 intellij {
     version = '2023.3.1'
 }
