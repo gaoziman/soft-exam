@@ -44,10 +44,14 @@
             <add-to-group group-id="FileMenu" anchor="first"/>
         </action>
 
-        <action id="org.javatop.helloworldplugin.action.HelloAction" class="org.javatop.exam.action.HelloAction"
-                text="点击显示你好" description="初始显示你好的第一个Action">
-            <add-to-group group-id="ToolsMenu" anchor="first"/>
-            <add-to-group group-id="EditorPopupMenu" anchor="first"/>
+        <!-- <action id="org.javatop.helloworldplugin.action.HelloAction" class="org.javatop.exam.action.HelloAction" -->
+        <!--         text="点击显示你好" description="初始显示你好的第一个Action"> -->
+        <!--     <add-to-group group-id="ToolsMenu" anchor="first"/> -->
+        <!--     <add-to-group group-id="EditorPopupMenu" anchor="first"/> -->
+        <!-- </action> -->
+        <action id="org.javatop.exam.action.MyAction" class="org.javatop.exam.action.MyAction"
+                text="Show Login/Registration" description="Show Login/Registration">
+            <add-to-group group-id="MainMenu" anchor="last"/>
         </action>
     </actions>
 </idea-plugin>
