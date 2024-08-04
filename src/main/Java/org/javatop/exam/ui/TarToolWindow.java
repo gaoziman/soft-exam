@@ -121,6 +121,10 @@ public class TarToolWindow {
         gbc.gridwidth = 2;
         panel.add(loginButton, gbc);
 
+
+        /**
+         * 登录按钮事件监听器
+         */
         loginButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -129,17 +133,17 @@ public class TarToolWindow {
                 if (username != null && !username.isEmpty() && password != null && !password.isEmpty()) {
                     if (users.containsKey(username) && users.get(username).equals(password)) {
                         JOptionPane.showMessageDialog(panel, "登录成功！");
-                        hideLoginAndRegisterTabs();
-                        suppressChangeListener = true; // 禁用监听器
                         tabbedPane.setSelectedIndex(tabbedPane.indexOfTab("主页统计"));
+                        if (registerFrame != null) {
+                            registerFrame.dispose(); // 关闭注册弹框
+                            registerFrame = null; // 清空引用
+                        }
+                        hideLoginAndRegisterTabs();
                         suppressChangeListener = false; // 恢复监听器
                     } else if (users.containsKey(username)) {
                         JOptionPane.showMessageDialog(panel, "密码错误！");
                     } else {
                         JOptionPane.showMessageDialog(panel, "用户不存在！");
-                        suppressChangeListener = true; // 禁用监听器
-                        tabbedPane.setSelectedIndex(tabbedPane.indexOfTab("注册"));
-                        suppressChangeListener = false; // 恢复监听器
                     }
                 } else {
                     JOptionPane.showMessageDialog(panel, "用户名和密码不能为空！");
@@ -150,6 +154,9 @@ public class TarToolWindow {
         return panel;
     }
 
+    /**
+     * 显示登录注册弹框
+     */
     private void showRegisterDialog() {
         if (registerFrame != null && registerFrame.isVisible()) {
             registerFrame.dispose(); // 关闭之前的弹框
@@ -184,6 +191,10 @@ public class TarToolWindow {
         });
     }
 
+
+    /**
+     * 隐藏登录和注册选项卡
+     */
     private void hideLoginAndRegisterTabs() {
         int loginIndex = tabbedPane.indexOfTab("登录");
         int registerIndex = tabbedPane.indexOfTab("注册");
@@ -194,7 +205,6 @@ public class TarToolWindow {
             tabbedPane.removeTabAt(registerIndex);
         }
     }
-
 
     public JComponent getComponent() {
         return mainJPanel;
