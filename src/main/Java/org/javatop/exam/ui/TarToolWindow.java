@@ -1,5 +1,6 @@
 package org.javatop.exam.ui;
 
+import org.javatop.exam.dao.UserDao;
 import org.javatop.exam.infrastructure.DataSetting;
 
 import javax.swing.*;
@@ -10,6 +11,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashMap;
 import java.util.Map;
+
+import static org.javatop.exam.constant.LoginConstant.LOGIN_SUCCESS;
+import static org.javatop.exam.constant.LoginConstant.USER_FAIL;
+import static org.javatop.exam.constant.RegisterConstant.*;
 
 public class TarToolWindow {
     private JPanel mainJPanel;
@@ -64,6 +69,8 @@ public class TarToolWindow {
     // 标志变量，防止在登录成功后切换到主页时弹出注册框
     private boolean suppressChangeListener = false;
 
+    private UserDao userDao = new UserDao();
+
     public TarToolWindow() {
         // 检查是否已经登录
         DataSetting dataSetting = DataSetting.getInstance();
@@ -72,33 +79,12 @@ public class TarToolWindow {
             // 已经登录，直接显示主页统计
             SwingUtilities.invokeLater(() -> {
                 hideLoginAndRegisterTabs();
+                addLogoutTab();
                 tabbedPane.setSelectedIndex(tabbedPane.indexOfTab("主页统计"));
             });
         } else {
-            // 添加注册选项卡
-            JPanel registerPanel = new JPanel();
-            tabbedPane.addTab("注册", registerPanel);
-
-            // 添加登录选项卡
-            JPanel loginPanel = createLoginPanel();
-            tabbedPane.addTab("登录", loginPanel);
-
-            // 为选项卡添加监听器
-            tabbedPane.addChangeListener(new ChangeListener() {
-                @Override
-                public void stateChanged(ChangeEvent e) {
-                    if (suppressChangeListener) {
-                        return;
-                    }
-
-                    int selectedIndex = tabbedPane.getSelectedIndex();
-                    String selectedTabTitle = tabbedPane.getTitleAt(selectedIndex);
-
-                    if ("注册".equals(selectedTabTitle)) {
-                        SwingUtilities.invokeLater(() -> showRegisterDialog());
-                    }
-                }
-            });
+            // 添加注册和登录选项卡
+            addLoginAndRegisterTabs();
         }
     }
 
@@ -134,27 +120,28 @@ public class TarToolWindow {
         gbc.gridwidth = 2;
         panel.add(loginButton, gbc);
 
-
-        /**
-         * 登录按钮事件监听器
-         */
+        // 登录按钮事件监听器
         loginButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String username = usernameField.getText();
                 String password = new String(passwordField.getPassword());
-                if (username != null && !username.isEmpty() && password != null && !password.isEmpty()) {
-                    if (users.containsKey(username) && users.get(username).equals(password)) {
+                if (username != null && !username.isEmpty() && !password.isEmpty()) {
+                    int loginResult = userDao.loginUser(username, password);
+                    if (loginResult == LOGIN_SUCCESS) {
                         JOptionPane.showMessageDialog(panel, "登录成功！");
                         DataSetting.getInstance().setLoggedInUser(username); // 保存登录状态
-                        tabbedPane.setSelectedIndex(tabbedPane.indexOfTab("主页统计"));
+                        SwingUtilities.invokeLater(() -> {
+                            tabbedPane.setSelectedIndex(tabbedPane.indexOfTab("主页统计"));
+                            hideLoginAndRegisterTabs();
+                            addLogoutTab();
+                        });
                         if (registerFrame != null) {
-                            registerFrame.dispose(); // 关闭注册弹框
-                            registerFrame = null; // 清空引用
+                            registerFrame.dispose();
+                            registerFrame = null;
                         }
-                        hideLoginAndRegisterTabs();
-                        suppressChangeListener = false; // 恢复监听器
-                    } else if (users.containsKey(username)) {
+                        suppressChangeListener = false;
+                    } else if (loginResult == USER_FAIL) {
                         JOptionPane.showMessageDialog(panel, "密码错误！");
                     } else {
                         JOptionPane.showMessageDialog(panel, "用户不存在！");
@@ -168,36 +155,36 @@ public class TarToolWindow {
         return panel;
     }
 
-    /**
-     * 显示登录注册弹框
-     */
     private void showRegisterDialog() {
         if (registerFrame != null && registerFrame.isVisible()) {
-            registerFrame.dispose(); // 关闭之前的弹框
+            registerFrame.dispose();
         }
         SettingUI settingUI = new SettingUI();
         registerFrame = new JFrame("注册");
         registerFrame.setContentPane(settingUI.getComponent());
         registerFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         registerFrame.pack();
-        // 设置窗口大小
         registerFrame.setSize(400, 300);
-        // 设置窗口居中显示
         registerFrame.setLocationRelativeTo(null);
         registerFrame.setVisible(true);
-        // 注册完成后添加用户到users集合
         settingUI.getRegButton().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String username = settingUI.getLoginTextField().getText();
                 String password = new String(settingUI.getPasswordField().getText());
                 if (username != null && !username.isEmpty() && password != null && !password.isEmpty()) {
-                    users.put(username, password); // 修改为同时存储用户名和密码
-                    JOptionPane.showMessageDialog(registerFrame, "注册成功！");
-                    registerFrame.dispose();
-                    suppressChangeListener = true; // 禁用监听器
-                    tabbedPane.setSelectedIndex(tabbedPane.indexOfTab("登录"));
-                    suppressChangeListener = false; // 恢复监听器
+                    int registerResult = userDao.registerUser(username, password);
+                    if (registerResult == REGISTER_SUCCESS) {
+                        JOptionPane.showMessageDialog(registerFrame, "注册成功！");
+                        registerFrame.dispose();
+                        suppressChangeListener = true;
+                        tabbedPane.setSelectedIndex(tabbedPane.indexOfTab("登录"));
+                        suppressChangeListener = false;
+                    } else if (registerResult == USERNAME_EXIST) {
+                        JOptionPane.showMessageDialog(registerFrame, "用户名已存在！");
+                    } else {
+                        JOptionPane.showMessageDialog(registerFrame, "注册失败，请重试！");
+                    }
                 } else {
                     JOptionPane.showMessageDialog(registerFrame, "用户名和密码不能为空！");
                 }
@@ -205,10 +192,86 @@ public class TarToolWindow {
         });
     }
 
+    private void addLogoutTab() {
+        JPanel logoutPanel = new JPanel();
+        tabbedPane.addTab("退出登录", logoutPanel);
+        tabbedPane.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                if (suppressChangeListener) {
+                    return;
+                }
 
-    /**
-     * 隐藏登录和注册选项卡
-     */
+                int selectedIndex = tabbedPane.getSelectedIndex();
+                String selectedTabTitle = tabbedPane.getTitleAt(selectedIndex);
+
+                if ("退出登录".equals(selectedTabTitle)) {
+                    showLogoutDialog();
+                }
+            }
+        });
+    }
+
+    private void showLogoutDialog() {
+        int option = JOptionPane.showConfirmDialog(mainJPanel, "确定要退出登录吗?", "确认退出", JOptionPane.YES_NO_OPTION);
+        if (option == JOptionPane.YES_OPTION) {
+            DataSetting.getInstance().setLoggedInUser(null);
+            // 清除登录状态
+            if (registerFrame != null) {
+                registerFrame.dispose();
+                registerFrame = null;
+            }
+            showLoginAndRegisterTabs();
+            hideLogoutTab();
+            tabbedPane.setSelectedIndex(tabbedPane.indexOfTab("主页统计"));
+            suppressChangeListener = false;
+        } else {
+            tabbedPane.setSelectedIndex(tabbedPane.indexOfTab("主页统计"));
+        }
+    }
+
+    private void showLoginAndRegisterTabs() {
+        if (tabbedPane.indexOfTab("登录") == -1) {
+            JPanel registerPanel = new JPanel();
+            tabbedPane.addTab("注册", registerPanel);
+
+            JPanel loginPanel = createLoginPanel();
+            tabbedPane.addTab("登录", loginPanel);
+        }
+    }
+
+    private void hideLogoutTab() {
+        int logoutIndex = tabbedPane.indexOfTab("退出登录");
+        if (logoutIndex != -1) {
+            tabbedPane.removeTabAt(logoutIndex);
+        }
+    }
+
+    private void addLoginAndRegisterTabs() {
+        JPanel registerPanel = new JPanel();
+        tabbedPane.addTab("注册", registerPanel);
+
+        JPanel loginPanel = createLoginPanel();
+        tabbedPane.addTab("登录", loginPanel);
+
+        // 为选项卡添加监听器
+        tabbedPane.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                if (suppressChangeListener) {
+                    return;
+                }
+
+                int selectedIndex = tabbedPane.getSelectedIndex();
+                String selectedTabTitle = tabbedPane.getTitleAt(selectedIndex);
+
+                if ("注册".equals(selectedTabTitle)) {
+                    SwingUtilities.invokeLater(() -> showRegisterDialog());
+                }
+            }
+        });
+    }
+
     private void hideLoginAndRegisterTabs() {
         int loginIndex = tabbedPane.indexOfTab("登录");
         int registerIndex = tabbedPane.indexOfTab("注册");

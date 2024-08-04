@@ -12,9 +12,9 @@ import java.sql.SQLException;
  */
 public class DatabaseUtil {
     private static final String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
-    private static final String DB_URL = "jdbc:mysql://xxx.xxx.xxx.xxx:3306/oss213?serverTimezone=Asia/Shanghai&autoReconnect=true&useUnicode=true&characterEncoding=utf-8";
+    private static final String DB_URL = "jdbc:mysql://180.188.45.71:3306/soft_exam?serverTimezone=Asia/Shanghai&autoReconnect=true&useUnicode=true&characterEncoding=utf-8";
     private static final String USER = "root";
-    private static final String PASS = "xxxxxx";
+    private static final String PASS = "gzm2001..";
 
     public static Connection getConnection() throws SQLException {
         // 注册 JDBC 驱动
