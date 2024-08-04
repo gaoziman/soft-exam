@@ -10,7 +10,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-@State(name = "DataSetting",storages = @Storage("plugin.xml"))
+
+@State(name = "DataSetting", storages = @Storage("plugin.xml"))
 public class DataSetting implements PersistentStateComponent<DataState> {
 
     private DataState state = new DataState();
@@ -30,8 +31,11 @@ public class DataSetting implements PersistentStateComponent<DataState> {
         this.state = state;
     }
 
-     public List<String> getGids(){
-        return state.getTopicNumList();
-     }
+    public void setLoggedInUser(String username) {
+        state.setLoggedInUser(username);
+    }
 
+    public String getLoggedInUser() {
+        return state.getLoggedInUser();
+    }
 }
